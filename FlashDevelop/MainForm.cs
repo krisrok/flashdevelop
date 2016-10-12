@@ -3799,6 +3799,8 @@ namespace FlashDevelop
             {
                 sci.EndUndoAction();
             }
+            sci.SelectionStart = sci.PositionFromLine(startLine);
+            sci.SelectionEnd = sci.PositionFromLine(endLine + 1);
         }
 
         /// <summary>
