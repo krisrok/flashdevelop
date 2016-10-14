@@ -77,6 +77,11 @@ namespace FDBuild.Building.AS3
                     WriteDefine(define.Substring(0, p), define.Substring(p + 1));
                 }
             }
+
+            if (string.IsNullOrEmpty(project.TargetBuild) == false)
+            {
+                WriteDefine(string.Format("TARGETBUILD::{0}", project.TargetBuild), "true");
+            }
         }
 
         private void WriteDefine(string name, string value)
