@@ -37,10 +37,12 @@ namespace ProjectManager.Projects
             WritePostBuildCommand();
             WriteProjectOptions();
             WriteStorage();
+            WriteAllTargetBuildTypes();
             OnBeforeEndProject();
             WriteEndElement();
             WriteEndDocument();
         }
+
 
         protected virtual void OnAfterBeginProject() { }
         protected virtual void OnAfterWriteClasspaths() { }
@@ -134,6 +136,31 @@ namespace ProjectManager.Projects
                 WriteStartElement("entry");
                 WriteAttributeString("key", key);
                 WriteCData(value);
+                WriteEndElement();
+            }
+            WriteEndElement();
+        }
+
+        private void WriteAllTargetBuildTypes()
+        {
+            WriteTargetBuildTypes("targetBuildTypes", project.MovieOptions.TargetBuildTypes, " Target build types ");
+        }
+
+        private void WriteTargetBuildTypes(string tagName, TargetBuildType[] targetBuildTypes, string comment)
+        {
+            if (targetBuildTypes == null)
+                return;
+
+            WriteComment(comment);
+            WriteStartElement(tagName);
+            foreach (var targetBuildType in targetBuildTypes)
+            {
+                WriteStartElement("targetBuildType");
+                WriteAttributeString("name", targetBuildType.Name);
+                if (project.TargetBuild == targetBuildType.Name)
+                    WriteAttributeString("selected", "true");
+                if (targetBuildType.IsRemovable == false)
+                    WriteAttributeString("removable", "false");
                 WriteEndElement();
             }
             WriteEndElement();

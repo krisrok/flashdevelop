@@ -4,6 +4,18 @@ using PluginCore;
 
 namespace ProjectManager.Projects
 {
+    public class TargetBuildType
+    {
+        public string Name;
+        public bool IsSelected;
+        public bool IsRemovable;
+
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+
     public abstract class MovieOptions
     {
         public string Language;
@@ -14,7 +26,8 @@ namespace ProjectManager.Projects
         public int MinorVersion;
         public string Platform;
         public string Background;
-        public string[] TargetBuildTypes;
+        //public string[] TargetBuildTypes;
+        public TargetBuildType[] TargetBuildTypes;
         public string[] DefaultBuildTargets;
 
         public MovieOptions()

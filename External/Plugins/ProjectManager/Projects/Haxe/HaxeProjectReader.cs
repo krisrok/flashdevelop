@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using PluginCore;
 
 namespace ProjectManager.Projects.Haxe
@@ -48,7 +49,12 @@ namespace ProjectManager.Projects.Haxe
                 if (options.HasPlatformSupport)
                 {
                     var platform = options.PlatformSupport;
-                    options.TargetBuildTypes = platform.Targets;
+                    options.TargetBuildTypes = platform.Targets?.Select(t => new TargetBuildType()
+                    {
+                        Name = t,
+                        IsSelected = false,
+                        IsRemovable = false
+                    }).ToArray();
                     needSave = true;
                 }
                 if (needSave)

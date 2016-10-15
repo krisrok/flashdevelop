@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
@@ -370,7 +371,12 @@ namespace ProjectManager.Projects.Haxe
             if (MovieOptions.HasPlatformSupport)
             {
                 var platform = MovieOptions.PlatformSupport;
-                MovieOptions.TargetBuildTypes = platform.Targets;
+                MovieOptions.TargetBuildTypes = platform.Targets.Select(t => new TargetBuildType
+                {
+                    Name = t,
+                    IsSelected = false,
+                    IsRemovable = false
+                }).ToArray();
 
                 if (platform.Name == "hxml" && string.IsNullOrEmpty(TargetBuild))
                     TargetBuild = haxeTarget ?? "";

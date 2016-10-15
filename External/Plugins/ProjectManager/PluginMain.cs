@@ -317,7 +317,7 @@ namespace ProjectManager
             Project project = activeProject;
             if (project != null && project.TargetBuild != target)
             {
-                menus.AddTargetBuild(target);
+                menus.AddTargetBuild(target, true);
                 FlexCompilerShell.Cleanup();
                 project.TargetBuild = menus.TargetBuildSelector.Text;
                 project.UpdateVars(false);

@@ -7,6 +7,8 @@ using PluginCore.Localization;
 using PluginCore;
 using PluginCore.Utilities;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using ProjectManager.Projects;
 using PluginCore.Helpers;
 
@@ -22,6 +24,8 @@ namespace ProjectManager.Controls
         public ToolStripComboBoxEx TargetBuildSelector;
         public RecentProjectsMenu RecentProjects;
         public ProjectMenu ProjectMenu;
+        public ToolStripButton RemoveTargetBuildType;
+        private Project project;
 
         public FDMenus(IMainForm mainForm)
         {
@@ -90,10 +94,49 @@ namespace ProjectManager.Controls
             TargetBuildSelector.Margin = new Padding(1, 0, 0, 0);
             TargetBuildSelector.FlatStyle = PluginBase.MainForm.Settings.ComboBoxFlatStyle;
             TargetBuildSelector.Font = PluginBase.Settings.DefaultFont;
+            TargetBuildSelector.FlatCombo.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
             toolBar.Items.Add(TargetBuildSelector);
             PluginBase.MainForm.RegisterShortcutItem("ProjectMenu.TargetBuildSelector", Keys.Control | Keys.F7);
             PluginBase.MainForm.RegisterSecondaryItem("ProjectMenu.TargetBuildSelector", TargetBuildSelector);
             EnableTargetBuildSelector(false);
+
+            RemoveTargetBuildType = new ToolStripButton(Icons.X.Img);
+            RemoveTargetBuildType.Name = "RemoveTargetBuildType";
+            RemoveTargetBuildType.ToolTipText = TextHelper.GetString("ToolTip.RemoveTargetBuildType");
+            RemoveTargetBuildType.Click += RemoveTargetBuildTypeOnClick;
+            //RemoveTargetBuildType.AutoSize = true;
+            RemoveTargetBuildType.Size = new Size(10, 10);
+            //RemoveTargetBuildType.ImageScaling = ToolStripItemImageScaling.SizeToFit;
+            toolBar.Items.Add(RemoveTargetBuildType);
+        }
+
+        private void RemoveTargetBuildTypeOnClick(object sender, EventArgs eventArgs)
+        {
+            if (MessageBox.Show(
+                string.Format("{1} '{0}'", TargetBuildSelector.SelectedItem, TextHelper.GetString("Label.ConfirmRemoveTargetBuildType")),
+                "Delete?", MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            try
+            {
+                TargetBuildSelector.Items.Remove(TargetBuildSelector.SelectedItem);
+
+                if (TargetBuildSelector.Items.Count > 0)
+                {
+                    TargetBuildSelector.SelectedItem = TargetBuildSelector.Items[0];
+                }
+                else
+                {
+                    TargetBuildSelector.Text = "";
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
         }
 
         private int GetThemeWidth(string themeId, int defaultValue)
@@ -129,6 +172,8 @@ namespace ProjectManager.Controls
             TestMovie.Enabled = true;
             BuildProject.Enabled = true;
             ProjectChanged(project);
+
+            this.project = project;
         }
 
         public void CloseProject()
@@ -148,7 +193,10 @@ namespace ProjectManager.Controls
             else if (project.MovieOptions.TargetBuildTypes != null && project.MovieOptions.TargetBuildTypes.Length > 0)
             {
                 TargetBuildSelector.Items.AddRange(project.MovieOptions.TargetBuildTypes);
-                string target = project.TargetBuild ?? project.MovieOptions.TargetBuildTypes[0];
+                //string target = project.TargetBuild ?? project.MovieOptions.TargetBuildTypes[0];
+                string target =
+                    (project.MovieOptions.TargetBuildTypes.FirstOrDefault(tbt => tbt.IsSelected) ??
+                     project.MovieOptions.TargetBuildTypes.First()).Name;
                 AddTargetBuild(target);
                 TargetBuildSelector.Text = target;
             }
@@ -161,15 +209,39 @@ namespace ProjectManager.Controls
             EnableTargetBuildSelector(true);
         }
 
-        internal void AddTargetBuild(string target)
+        internal void AddTargetBuild(string target, bool apply = false)
         {
-            if (target == null) return;
+            if (target == null)
+                return;
+
             target = target.Trim();
-            if (target.Length > 0 && !TargetBuildSelector.Items.Contains(target)) 
-                TargetBuildSelector.Items.Insert(0, target);
+            if (target == string.Empty)
+                return;
+
+            var targetBuildType = TargetBuildSelector.Items.Cast<TargetBuildType>().FirstOrDefault(tbt => target.Equals(tbt.Name));
+
+            if (targetBuildType == null)
+            {
+                targetBuildType = new TargetBuildType()
+                {
+                    Name = target,
+                    IsRemovable = true
+                };
+
+                TargetBuildSelector.Items.Add(targetBuildType);
+            }
+
+            if (apply && project != null)
+            {
+                project.TargetBuild = target;
+                project.MovieOptions.TargetBuildTypes = TargetBuildSelector.Items.Cast<TargetBuildType>().ToArray();
+                project.Save();
+            }
+
+            RemoveTargetBuildType.Enabled = targetBuildType.IsRemovable;
         }
 
-        
+
         public void ToggleDebugRelease()
         {
             ConfigurationSelector.SelectedIndex = (ConfigurationSelector.SelectedIndex + 1) % 2;

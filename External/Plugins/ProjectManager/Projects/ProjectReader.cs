@@ -64,7 +64,44 @@ namespace ProjectManager.Projects
                 case "postBuildCommand": ReadPostBuildCommand(); break;
                 case "options": ReadProjectOptions(); break;
                 case "storage": ReadPluginStorage(); break;
+                case "targetBuildTypes": ReadTargetBuildTypes(); break;
             }
+        }
+
+        private void ReadTargetBuildTypes()
+        {
+            var targetBuilds = new List<TargetBuildType>();
+            ReadStartElement("targetBuildTypes");
+            while (Name == "targetBuildType")
+            {
+                var name = GetAttribute("name");
+                var removable = GetAttributeAsBool("removable", true);
+                var selected = GetAttributeAsBool("selected", false);
+
+                targetBuilds.Add(new TargetBuildType
+                {
+                    Name = name,
+                    IsSelected = selected,
+                    IsRemovable = removable
+                });
+                Read();
+            }
+            ReadEndElement();
+
+            project.MovieOptions.TargetBuildTypes = targetBuilds.ToArray();
+        }
+
+        private bool GetAttributeAsBool(string name, bool defaultValue)
+        {
+            var stringValue = GetAttribute(name);
+            if(stringValue == null)
+                return defaultValue;
+
+            bool result;
+            if (bool.TryParse(stringValue, out result))
+                return result;
+
+            return defaultValue;
         }
 
         private void ReadPluginStorage()
